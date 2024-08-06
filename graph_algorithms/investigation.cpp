@@ -24,18 +24,24 @@ vector<long long> prices;
 vector<long long> routes;
 vector<int> minCities;
 vector<int> maxCities;
-vector<bool> visited;
+vector<int> visited;
 vector<vector<Edge>> graph;
  
 Pair dfs(int node, int n) {
-    if (visited[node]) return {minCities[node], maxCities[node], INF, routes[node]};
-    visited[node] = true;
+    if (visited[node] == 2) return {minCities[node], maxCities[node], prices[node], routes[node]};
+
+    if(visited[node] == 1) {
+       return {minCities[node], maxCities[node], INF, routes[node]}; 
+    }
+
+    visited[node] = 1;
  
     if (node == n) {
         prices[node] = 0;
         routes[node] = 1;
         minCities[node] = 0;
         maxCities[node] = 0;
+        visited[node] = 2;
         return {0, 0, 0, 1};
     }
  
@@ -70,8 +76,9 @@ Pair dfs(int node, int n) {
     minCities[node] = minCitiesNode;
     maxCities[node] = maxCitiesNode;
     routes[node] = routesNode;
-    
-    visited[node] = false;
+
+    visited[node] = 2;
+ 
     return {minCitiesNode, maxCitiesNode, priceNode, routesNode};
 }
  
@@ -87,7 +94,7 @@ int main() {
     routes.resize(n + 1, 0);
     minCities.resize(n + 1, INT_MAX);
     maxCities.resize(n + 1, INT_MIN);
-    visited.resize(n + 1, false);
+    visited.resize(n + 1, 0);
  
     for (int i = 0; i < m; ++i) {
         int a, b, c;

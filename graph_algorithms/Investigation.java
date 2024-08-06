@@ -5,11 +5,6 @@ import java.io.*;
 
 public class Investigation {
 
-    private static long prices[];
-    private static long routes[];
-    private static int minCities[];
-    private static int maxCities[];
-    private static int vis[];
     private static final int MOD = 1000000007;
 
     public static void main(String[] args) {
@@ -25,89 +20,69 @@ public class Investigation {
         for(int i=0; i<m; i++) {
             int a = sc.nextInt();
             int b = sc.nextInt();
-            long c = sc.nextLong();
+            int c = sc.nextInt();
 
             graph.get(a).add(new Edge(b, c));
         }
 
-        prices = new long[n+1];
-        routes = new long[n+1];
-        minCities = new int[n+1];
-        maxCities = new int[n+1];
-        vis = new int[n+1];
-
+        long dist[] = new long[n+1];
+        long routes[] = new long[n+1];
+        int minCities[] = new int[n+1];
+        int maxCities[] = new int[n+1];
         for(int i=0; i<=n; i++) {
-            prices[i] = Long.MAX_VALUE;
+            dist[i] = Long.MAX_VALUE;
+            minCities[i] = Integer.MAX_VALUE;
+            maxCities[i] = Integer.MIN_VALUE;
         }
-
-        prices[n] = 0;
-        routes[n] = 1;
-        minCities[n] = 0;
-        maxCities[n] = 0;
-
-        dfs(graph, 1);
-
-        System.out.println(prices[1] + " " + routes[1] + " " + minCities[1] + " " + maxCities[1]);
-    }
-
-    public static Pair dfs(List<List<Edge>> graph, int node) {
-        if(vis[node] == 1) {
-            return null;
-        }
+        dist[1] = 0;
+        routes[1] = 1;
+        minCities[1] = 0;
+        maxCities[1] = 0;
         
-        vis[node] = 1;
-        if(prices[node] != Long.MAX_VALUE) {
-            vis[node] = 0;
-            return new Pair(minCities[node], maxCities[node], prices[node], routes[node]);
-        }
-    
-        int minCitiesNode = Integer.MAX_VALUE;
-        int maxCitiesNode = Integer.MIN_VALUE;
-        long routesNode = 0;
-        long priceNode = Long.MAX_VALUE;
+        PriorityQueue<Pair> pq = new PriorityQueue<>();
+        pq.add(new Pair(1, 0));
+        while(!pq.isEmpty()) {
+            Pair p = pq.poll();
 
-        for(Edge edge : graph.get(node)) {
-            int neighbor = edge.to;
-            long weight = edge.cost;
-
-            Pair p = dfs(graph, neighbor);
-
-            if(p == null) {
-                continue;
+            for(Edge edge : graph.get(p.node)) {
+                if(dist[edge.to] > p.totalCost + edge.cost) {
+                    dist[edge.to] = p.totalCost + edge.cost;
+                    pq.add(new Pair(edge.to, edge.cost + p.totalCost));
+                    routes[edge.to] = routes[p.node];
+                    minCities[edge.to] = minCities[p.node]+1;
+                    maxCities[edge.to] = maxCities[p.node]+1;
+                } else if(dist[edge.to] == p.totalCost + edge.cost) {
+                    routes[edge.to] += routes[p.node];
+                    routes[edge.to] %= MOD;
+                    minCities[edge.to] = Math.min(minCities[edge.to], minCities[p.node]+1);
+                    maxCities[edge.to] = Math.max(maxCities[edge.to], maxCities[p.node]+1);
+                }
             }
-
-            if(priceNode == p.price + weight) {
-                routesNode += p.routes;
-                routesNode %= MOD;
-
-            } else if(priceNode > p.price + weight) {
-                routesNode = p.routes;
-                routesNode %= MOD;
-                minCitiesNode = Integer.MAX_VALUE;
-                maxCitiesNode = Integer.MIN_VALUE;
-            }
-
-            priceNode = Math.min(priceNode, p.price + weight);
-            if(priceNode == p.price + weight) {
-                minCitiesNode = Math.min(minCitiesNode, 1 + p.minCities);
-                maxCitiesNode = Math.max(maxCitiesNode, 1 + p.maxCities);
-            }
-
         }
 
-        prices[node] = priceNode;
-        minCities[node] = minCitiesNode;
-        maxCities[node] = maxCitiesNode;
-        routes[node] = routesNode;
+        System.out.println(dist[n] + " " + routes[n] + " " + minCities[n] + " " + maxCities[n]);
 
-        if(prices[node] == Long.MAX_VALUE) {
-            return null;
-        }
-
-        vis[node] = 0;
-        return new Pair(minCitiesNode, maxCitiesNode, priceNode, routesNode);
     }
     
+}
+
+class Pair implements Comparable<Pair> {
+    int node;
+    long totalCost;
+
+    public Pair(int node, long totalCost) {
+        this.node = node;
+        this.totalCost = totalCost;
+    }
+
+    public int compareTo(Pair p) {
+        if(this.totalCost > p.totalCost) {
+            return 1;
+        } else if(this.totalCost < p.totalCost) {
+            return -1;
+        }
+        return 0;
+    }
 }
 
 class Edge {
@@ -117,24 +92,6 @@ class Edge {
     public Edge(int to, long cost) {
         this.to = to;
         this.cost = cost;
-    }
-}
-
-class Pair {
-    int minCities;
-    int maxCities;
-    long price;
-    long routes;
-
-    public Pair(int minCities, int maxCities, long price, long routes) {
-        this.minCities = minCities;
-        this.maxCities = maxCities;
-        this.price = price;
-        this.routes = routes;
-    }
-
-    public String toString() {
-        return "{minc:" + minCities + ", maxc: " + maxCities + ", price: " + price + ", routes: " + routes + "}";
     }
 }
 
